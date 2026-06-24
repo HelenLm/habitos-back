@@ -1,11 +1,14 @@
-# Etapa 1: Construcción usando Maven y Java 17
-FROM maven:3.8.5-openjdk-17 AS build
+# Etapa 1: Construcción usando Java 25 (Eclipse Temurin)
+FROM eclipse-temurin:25-jdk AS build
 WORKDIR /app
 COPY . .
-RUN mvn clean package -DskipTests
+# Damos permisos de ejecución al wrapper por si acaso
+RUN chmod +x mvnw
+# Usamos el wrapper de tu proyecto para compilar
+RUN ./mvnw clean package -DskipTests
 
-# Etapa 2: Ejecución del JAR generado
-FROM openjdk:17-jdk-slim
+# Etapa 2: Ejecución usando un entorno ligero de Java 25
+FROM eclipse-temurin:25-jre
 WORKDIR /app
 COPY --from=build /app/target/*.jar app.jar
 EXPOSE 8080
