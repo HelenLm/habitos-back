@@ -4,8 +4,8 @@ WORKDIR /app
 COPY . .
 # Damos permisos de ejecución al wrapper por si acaso
 RUN chmod +x mvnw
-# Usamos el wrapper de tu proyecto para compilar
-RUN ./mvnw clean package -DskipTests
+# Forzamos la codificación UTF-8 para evitar errores con acentos o caracteres especiales
+RUN ./mvnw clean package -DskipTests -Dfile.encoding=UTF-8
 
 # Etapa 2: Ejecución usando un entorno ligero de Java 25
 FROM eclipse-temurin:25-jre
