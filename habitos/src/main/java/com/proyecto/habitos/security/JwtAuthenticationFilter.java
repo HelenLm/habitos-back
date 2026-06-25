@@ -7,7 +7,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.web.authentication.WebAuthenticationDetailsSource; // 🎯 NUEVO IMPORT
+import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -31,7 +31,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         final String jwt;
         final String userEmail;
 
-        if (path.startsWith("/api/auth/")) {
+        // 🎯 MODIFICADO: Si es la raíz exacta "/" o empieza con "/api/auth/", ignoramos la validación de JWT
+        if (path.equals("/") || path.startsWith("/api/auth/")) {
             filterChain.doFilter(request, response);
             return;
         }
@@ -51,15 +52,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                 if (jwtUtil.esTokenValido(jwt, userEmail)) {
 
-                    // 🎯 CORREGIDO: Creamos el token de autenticación pasándole el email como principal
+                    // Creamos el token de autenticación pasándole el email como principal
                     UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                             userEmail,
                             null,
                             new ArrayList<>() // Lista vacía de roles/autoridades
                     );
 
-                    // 🎯 CORREGIDO: Es crucial asociar los detalles de la petición actual (IP, sesión, etc.)
-                    // para que Spring Security no limpie el contexto en el camino.
+                    // Es crucial asociar los detalles de la petición actual (IP, sesión, etc.)
                     authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
                     // Seteamos la autenticación en el contexto global
