@@ -1,0 +1,8 @@
+POST http://localhost:8080/api/email/enviar
+Content-Type: application/json
+
+{
+  "destinatario": "hmorelosmoreno@gmail.com",
+  "asunto": "Prueba de envío desde el IDE",
+  "mensaje": "¡Hola! Esta es una prueba exitosa."
+}

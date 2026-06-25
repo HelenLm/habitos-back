@@ -55,6 +55,7 @@ public class SecurityConfig {
                         // 3. Rutas públicas normales
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/usuarios/**").permitAll()
+                        .requestMatchers("/api/email/**").permitAll()
 
                         // 4. PROTEGIDAS: Requieren autenticación para amarrar el 'Principal'
                         .requestMatchers("/api/habitos/**").authenticated()
