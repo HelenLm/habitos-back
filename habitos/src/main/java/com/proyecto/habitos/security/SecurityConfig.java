@@ -55,6 +55,7 @@ public class SecurityConfig {
                         // 3. Rutas públicas normales
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/usuarios/**").permitAll()
+                        .requestMatchers("/api/email/**").permitAll()
 
                         // 🎯 4. LIBERAR RUTAS PARA PRUEBAS (Evita el 403 en GET, POST y DELETE)
                         .requestMatchers("/api/habitos/**").permitAll()
