@@ -93,13 +93,4 @@ public class AuthController {
         return ResponseEntity.ok(successResponse);
     }
 
-    @GetMapping("/")
-    public Map<String, String> saludoRevision() {
-        Map<String, String> response = new HashMap<>();
-        response.put("estado", "ONLINE");
-        response.put("proyecto", "Sistema de Seguimiento de Habitos - Backend");
-        response.put("mensaje", "Servidor desplegado con exito en Render y conectado a YugabyteDB.");
-        response.put("documentacion", "https://habitos-back-5gll.onrender.com/swagger-ui.html");
-        return response;
-    }
 }
