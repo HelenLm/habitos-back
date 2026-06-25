@@ -90,4 +90,5 @@ public class AuthController {    private final UsuarioRepository usuarioReposito
         successResponse.put("mensaje", "¡Usuario creado exitosamente!");
         return ResponseEntity.ok(successResponse);
     }
+
 }

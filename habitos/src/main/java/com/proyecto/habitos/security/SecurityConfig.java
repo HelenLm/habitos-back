@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
@@ -61,7 +62,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/habitos/**").authenticated()
                         .requestMatchers("/api/categorias/**").authenticated()
 
-                        .requestMatchers("/api/auth/login", "/api/auth/register").permitAll()
+                        .requestMatchers("/api/auth/login", "/api/auth/register", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
 
                         // Cualquier otra ruta requiere estar logeado
                         .anyRequest().authenticated()
@@ -79,4 +80,16 @@ public class SecurityConfig {
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
+
+    @Bean
+    public WebSecurityCustomizer webSecurityCustomizer() {
+        return (web) -> web.ignoring().requestMatchers(
+                "/",
+                "/error", // 🎯 NUEVO: Evita que las redirecciones internas tiren 403
+                "/index.html",
+                "/swagger-ui/**",
+                "/v3/api-docs/**"
+        );
+    }
+
 }
