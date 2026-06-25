@@ -1,70 +1,94 @@
 package com.proyecto.habitos.service;
 
-import jakarta.mail.MessagingException;
-import jakarta.mail.internet.MimeMessage;
-import lombok.RequiredArgsConstructor;
-import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+
 @Service
-@RequiredArgsConstructor
 public class EmailService {
 
-    private final JavaMailSender mailSender;
+    @Value("${brevo.api.key}")
+    private String apiKey;
 
     public void enviarCorreoBienvenida(String correoDestino, String nombreUsuario) {
-        MimeMessage message = mailSender.createMimeMessage();
-        try {
-            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-            helper.setTo(correoDestino);
-            helper.setSubject("¡Bienvenido al Sistema de Seguimiento de Hábitos!");
+        String asunto = "¡Bienvenido al Sistema de Seguimiento de Hábitos!";
 
-            String contenidoHtml = "<html>" +
-                    "<body style='font-family: Arial, sans-serif; color: #333;'>" +
-                    "<div style='max-width: 600px; margin: 0 auto; border: 1px solid #ddd; padding: 20px; border-radius: 8px;'>" +
-                    "<h2 style='color: #4F46E5;'>¡Hola, " + nombreUsuario + "! ✨</h2>" +
-                    "<p>Nos da muchísimo gusto darte la bienvenida a tu nueva herramienta de crecimiento personal.</p>" +
-                    "<p>A partir de hoy, podrás registrar tus hábitos diarios, definir metas claras y evaluar tu progreso en tiempo real.</p>" +
-                    "<br>" +
-                    "<p style='font-size: 12px; color: #777;'>Este es un correo automático generado por Hábitos.</p>" +
-                    "</div>" +
-                    "</body>" +
-                    "</html>";
+        // Conservamos exactamente tu diseño HTML original
+        String contenidoHtml = "<html>" +
+                "<body style='font-family: Arial, sans-serif; color: #333;'>" +
+                "<div style='max-width: 600px; margin: 0 auto; border: 1px solid #ddd; padding: 20px; border-radius: 8px;'>" +
+                "<h2 style='color: #4F46E5;'>¡Hola, " + nombreUsuario + "! ✨</h2>" +
+                "<p>Nos da muchísimo gusto darte la bienvenida a tu nueva herramienta de crecimiento personal.</p>" +
+                "<p>A partir de hoy, podrás registrar tus hábitos diarios, definir metas claras y evaluar tu progreso en tiempo real.</p>" +
+                "<br>" +
+                "<p style='font-size: 12px; color: #777;'>Este es un correo automático generado por Hábitos.</p>" +
+                "</div>" +
+                "</body>" +
+                "</html>";
 
-            helper.setText(contenidoHtml, true);
-            mailSender.send(message);
-            System.out.println("Correo enviado con éxito a: " + correoDestino);
-        } catch (MessagingException e) {
-            throw new RuntimeException("Error al ajustar o enviar el correo electrónico: " + e.getMessage());
-        }
+        enviarPeticionBrevo(correoDestino, asunto, contenidoHtml);
     }
 
     public void enviarCorreoDinamico(String destinatario, String asunto, String mensaje) {
-        MimeMessage message = mailSender.createMimeMessage();
+        // Conservamos exactamente tu diseño HTML original
+        String contenidoHtml = "<html>" +
+                "<body style='font-family: Arial, sans-serif; color: #333;'>" +
+                "<div style='max-width: 600px; margin: 0 auto; border: 1px solid #ddd; padding: 20px; border-radius: 8px;'>" +
+                "<h2 style='color: #4F46E5;'>Notificación de la API</h2>" +
+                "<p>" + mensaje + "</p>" +
+                "<br>" +
+                "<p style='font-size: 12px; color: #777;'>Este correo fue enviado mediante pruebas de desarrollo.</p>" +
+                "</div>" +
+                "</body>" +
+                "</html>";
+
+        enviarPeticionBrevo(destinatario, asunto, contenidoHtml);
+    }
+
+    // --- MOTOR INTERNO DE ENVÍO (API BREVO) ---
+    private void enviarPeticionBrevo(String destinatario, String asunto, String contenidoHtml) {
         try {
-            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            // Escapamos comillas dobles por si el HTML las contiene, para no romper el JSON
+            String htmlEscapado = contenidoHtml.replace("\"", "\\\"");
 
-            helper.setTo(destinatario);
-            helper.setSubject(asunto); // Asunto dinámico desde la API
+            // Construimos el JSON con los datos del correo
+            String jsonBody = """
+            {
+                "sender": { "name": "Hábitos App", "email": "deiiviid622@gmail.com" },
+                "to": [ { "email": "%s" } ],
+                "subject": "%s",
+                "htmlContent": "%s"
+            }
+            """.formatted(destinatario, asunto, htmlEscapado);
 
-            // Estructura HTML que envuelve el mensaje que tú escribas en Postman
-            String contenidoHtml = "<html>" +
-                    "<body style='font-family: Arial, sans-serif; color: #333;'>" +
-                    "<div style='max-width: 600px; margin: 0 auto; border: 1px solid #ddd; padding: 20px; border-radius: 8px;'>" +
-                    "<h2 style='color: #4F46E5;'>Notificación de la API</h2>" +
-                    "<p>" + mensaje + "</p>" + // Mensaje dinámico desde la API
-                    "<br>" +
-                    "<p style='font-size: 12px; color: #777;'>Este correo fue enviado mediante pruebas de desarrollo.</p>" +
-                    "</div>" +
-                    "</body>" +
-                    "</html>";
+            // Creamos el cliente HTTP nativo
+            HttpClient client = HttpClient.newHttpClient();
 
-            helper.setText(contenidoHtml, true);
-            mailSender.send(message);
-            System.out.println("Correo dinámico enviado con éxito a: " + destinatario);
-        } catch (MessagingException e) {
-            throw new RuntimeException("Error al enviar el correo dinámico: " + e.getMessage());
+            // Armamos la petición dirigida a la API de Brevo
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create("https://api.brevo.com/v3/smtp/email"))
+                    .header("accept", "application/json")
+                    .header("api-key", apiKey)
+                    .header("content-type", "application/json")
+                    .POST(HttpRequest.BodyPublishers.ofString(jsonBody))
+                    .build();
+
+            // Enviamos la petición
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+            // Verificamos si se envió correctamente (Código 201 significa "Creado/Enviado")
+            if (response.statusCode() == 201) {
+                System.out.println("Correo enviado con éxito a: " + destinatario);
+            } else {
+                System.err.println("Error al enviar correo (Código " + response.statusCode() + "): " + response.body());
+            }
+
+        } catch (Exception e) {
+            System.err.println("Excepción al intentar enviar el correo vía HTTP: " + e.getMessage());
         }
     }
 }
