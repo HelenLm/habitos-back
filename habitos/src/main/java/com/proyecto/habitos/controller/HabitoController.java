@@ -1,6 +1,9 @@
 package com.proyecto.habitos.controller;
 
 import com.proyecto.habitos.model.Habito;
+import com.proyecto.habitos.model.Usuario;
+import com.proyecto.habitos.repository.HabitoRepository;
+import com.proyecto.habitos.repository.UsuarioRepository;
 import com.proyecto.habitos.service.HabitoService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -9,31 +12,68 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/habitos")
-@CrossOrigin(origins = "http://localhost:4200")
 @RequiredArgsConstructor
+@CrossOrigin(origins = "*")
 public class HabitoController {
 
+    private final HabitoRepository habitoRepository;
+    private final UsuarioRepository usuarioRepository;
     private final HabitoService habitoService;
 
-    @GetMapping("/usuario/{idUsuario}")
-    public ResponseEntity<List<Habito>> listarPorUsuario(@PathVariable Integer idUsuario) {
-        return ResponseEntity.ok(habitoService.obtenerPorUsuario(idUsuario));
+    // 🎯 GET: Traer los hábitos privados del usuario logueado
+    @GetMapping
+    public ResponseEntity<List<Habito>> obtenerMisHabitos(java.security.Principal principal) {
+        if (principal == null) {
+            return ResponseEntity.status(401).build();
+        }
+
+        String correoUsuarioLogueado = principal.getName();
+        Usuario usuario = usuarioRepository.findByCorreoIgnoreCase(correoUsuarioLogueado)
+                .orElse(null);
+
+        if (usuario == null) {
+            return ResponseEntity.status(401).build();
+        }
+
+        // 🎯 SOLUCIÓN: Convertimos el Long del usuario a Integer para el HabitoRepository
+        // 🎯 Quitamos el .intValue() para que viaje como Long limpio
+        // 🎯 LA VIEJA CONFIABLE: Adapta el ID al tipo exacto del repositorio de hábitos
+        List<Habito> habitosPropios = habitoService.obtenerPorUsuario(usuario.getIdUsuario());
+        return ResponseEntity.ok(habitosPropios);
     }
 
+    // 🎯 POST: Guardar un hábito amarrándolo a su verdadero dueño
     @PostMapping
-    public ResponseEntity<Habito> crearHabito(@RequestBody Habito habito) {
-        return ResponseEntity.ok(habitoService.guardar(habito));
+    public ResponseEntity<?> crearHabito(@RequestBody Habito nuevoHabito, java.security.Principal principal) {
+        if (principal == null) {
+            return ResponseEntity.status(401).body("Sesión inválida.");
+        }
+
+        String correoUsuarioLogueado = principal.getName();
+        Usuario usuario = usuarioRepository.findByCorreoIgnoreCase(correoUsuarioLogueado)
+                .orElse(null);
+
+        if (usuario == null) {
+            return ResponseEntity.status(401).body("Usuario no encontrado.");
+        }
+
+        nuevoHabito.setUsuario(usuario);
+        Habito guardado = habitoRepository.save(nuevoHabito);
+        return ResponseEntity.ok(guardado);
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> eliminarHabito(@PathVariable Integer id) {
-        habitoService.eliminar(id);
-        return ResponseEntity.noContent().build();
-    }
+    // 🎯 PUT: Alternar estado del hábito (Marcar/Desmarcar)
+    @PutMapping("/{idHabito}/alternar")
+    public ResponseEntity<?> alternarEstadoHabito(@PathVariable Integer idHabito, java.security.Principal principal) {
+        if (principal == null) {
+            return ResponseEntity.status(401).body("Sesión inválida.");
+        }
 
-    @PutMapping("/{id}/alternar")
-    public ResponseEntity<Habito> alternarHabito(@PathVariable Integer id) {
-        // Llama de forma directa al servicio que repara los estados e historiales en YugabyteDB
-        return ResponseEntity.ok(habitoService.alternarEstado(id));
+        try {
+            Habito actualizado = habitoService.alternarEstado(idHabito);
+            return ResponseEntity.ok(actualizado);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Error al alternar estado: " + e.getMessage());
+        }
     }
 }

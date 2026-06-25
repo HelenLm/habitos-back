@@ -21,10 +21,10 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    // 🎯 CORREGIDO: Inyectamos tu JwtAuthenticationFilter real (que internamente ya usa JwtUtil)
+    // Inyectamos tu JwtAuthenticationFilter real
     private final JwtAuthenticationFilter jwtAuthFilter;
 
-    // 🎯 BEAN DE CORS GLOBAL
+    // BEAN DE CORS GLOBAL
     @Bean
     public CorsFilter corsFilter() {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
@@ -40,14 +40,14 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                // Deshabilitamos CSRF porque manejamos Tokens JWT
+                // 🎯 CONFIGURACIÓN CORREGIDA: Usamos Customizer.withDefaults() para aplicar el Bean de CORS que tienes arriba
                 .csrf(csrf -> csrf.disable())
-                .cors(cors -> cors.configure(http))
+                .cors(org.springframework.security.config.Customizer.withDefaults())
 
                 // Reglas de acceso globales
                 .authorizeHttpRequests(auth -> auth
                         // 1. Permitir todas las peticiones PREFLIGHT (OPTIONS) de Angular
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
 
                         // 2. Rutas de documentación de Swagger libres
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html", "/api-docs/**").permitAll()
@@ -56,9 +56,9 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/usuarios/**").permitAll()
 
-                        // 🎯 4. LIBERAR RUTAS PARA PRUEBAS (Evita el 403 en GET, POST y DELETE)
-                        .requestMatchers("/api/habitos/**").permitAll()
-                        .requestMatchers("/api/categorias/**").permitAll()
+                        // 4. PROTEGIDAS: Requieren autenticación para amarrar el 'Principal'
+                        .requestMatchers("/api/habitos/**").authenticated()
+                        .requestMatchers("/api/categorias/**").authenticated()
 
                         // Cualquier otra ruta requiere estar logeado
                         .anyRequest().authenticated()

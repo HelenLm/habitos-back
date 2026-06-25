@@ -20,12 +20,12 @@ public class CategoriaService {
         return categoriaRepository.save(categoria);
     }
 
-    public Categoria obtenerPorId(Long id) {
+    public Categoria obtenerPorId(Integer id) {
         return categoriaRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Categoría no encontrada con ID: " + id));
     }
 
-    public void eliminar(Long id) {
+    public void eliminar(Integer id) {
         categoriaRepository.deleteById(id);
     }
 }
