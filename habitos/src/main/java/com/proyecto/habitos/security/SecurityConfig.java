@@ -61,7 +61,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/habitos/**").authenticated()
                         .requestMatchers("/api/categorias/**").authenticated()
 
-                        .requestMatchers("/api/auth/login", "/api/auth/register").permitAll()
+                        .requestMatchers("/api/auth/login", "/api/auth/register", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
 
                         // Cualquier otra ruta requiere estar logeado
                         .anyRequest().authenticated()
