@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 @Entity
 @Table(name = "habito")
@@ -28,9 +30,9 @@ public class Habito {
     @JoinColumn(name = "id_usuario", nullable = false)
     private Usuario usuario;
 
-    // Relación con Categoria (Muchos hábitos pertenecen a una Categoría)
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "id_categoria", nullable = false)
+    @JoinColumn(name = "id_categoria", nullable = true)
+    @OnDelete(action = OnDeleteAction.SET_NULL)
     private Categoria categoria;
 
     @Transient

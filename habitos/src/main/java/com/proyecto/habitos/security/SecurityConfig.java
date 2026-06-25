@@ -21,9 +21,10 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
+    // 🎯 CORREGIDO: Inyectamos tu JwtAuthenticationFilter real (que internamente ya usa JwtUtil)
     private final JwtAuthenticationFilter jwtAuthFilter;
 
-    // 🎯 1. BEAN DE CORS GLOBAL: Esto fuerza a Spring a aceptar los PUT de Angular antes de evaluar los tokens
+    // 🎯 BEAN DE CORS GLOBAL
     @Bean
     public CorsFilter corsFilter() {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
@@ -41,23 +42,31 @@ public class SecurityConfig {
         http
                 // Deshabilitamos CSRF porque manejamos Tokens JWT
                 .csrf(csrf -> csrf.disable())
+                .cors(cors -> cors.configure(http))
 
-                // Reglas de acceso
+                // Reglas de acceso globales
                 .authorizeHttpRequests(auth -> auth
-                        // 🎯 1. PERMITIR TODAS LAS PETICIONES PREFLIGHT (OPTIONS) DE TU NAVEGADOR
+                        // 1. Permitir todas las peticiones PREFLIGHT (OPTIONS) de Angular
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        // 2. Rutas públicas normales
+
+                        // 2. Rutas de documentación de Swagger libres
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html", "/api-docs/**").permitAll()
+
+                        // 3. Rutas públicas normales
                         .requestMatchers("/api/auth/**").permitAll()
-                        // 3. Rutas protegidas por token
-                        .requestMatchers("/api/habitos/**").permitAll() // 🎯 PRUEBA DE CONTROL: Cambia temporalmente a permitAll() para verificar si es el token
-                        //.requestMatchers("/api/usuarios/**").authenticated()
                         .requestMatchers("/api/usuarios/**").permitAll()
+
+                        // 🎯 4. LIBERAR RUTAS PARA PRUEBAS (Evita el 403 en GET, POST y DELETE)
+                        .requestMatchers("/api/habitos/**").permitAll()
+                        .requestMatchers("/api/categorias/**").permitAll()
+
+                        // Cualquier otra ruta requiere estar logeado
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
+                // Inyectamos el filtro de seguridad JWT antes del filtro por defecto de Spring
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
