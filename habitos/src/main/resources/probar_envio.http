@@ -1,4 +1,4 @@
-POST http://localhost:8080/api/email/enviar
+POST https://habitos-back.onrender.com/api/email/enviar
 Content-Type: application/json
 
 {
