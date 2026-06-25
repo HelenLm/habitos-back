@@ -10,7 +10,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/metas")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = "https://habitos-front.netlify.app")
 public class MetaController {
 
     private final MetaService metaService;

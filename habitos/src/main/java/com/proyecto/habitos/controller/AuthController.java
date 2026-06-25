@@ -16,10 +16,8 @@ import java.util.HashMap;
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
-public class AuthController {
-
-    private final UsuarioRepository usuarioRepository;
+@CrossOrigin(origins = "https://habitos-front.netlify.app")
+public class AuthController {    private final UsuarioRepository usuarioRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
     private final EmailService emailService; // 🎯 Inyectamos tu servicio de correos mediante Lombok

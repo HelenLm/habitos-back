@@ -13,7 +13,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/categorias")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = "https://habitos-front.netlify.app")
 public class CategoriaController {
 
     private final CategoriaRepository categoriaRepository;

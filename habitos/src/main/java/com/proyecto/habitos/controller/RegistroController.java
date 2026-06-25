@@ -10,7 +10,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/registros")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = "https://habitos-front.netlify.app")
 public class RegistroController {
 
     private final RegistroService registroService;

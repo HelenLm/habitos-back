@@ -20,7 +20,7 @@ import java.util.List;
 @io.swagger.v3.oas.annotations.security.SecurityRequirement(name = "BearerAuth")
 @RequestMapping("/api/usuarios")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = "https://habitos-front.netlify.app")
 public class UsuarioController {
 
     private final UsuarioService usuarioService;
