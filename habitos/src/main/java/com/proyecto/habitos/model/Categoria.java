@@ -19,4 +19,8 @@ public class Categoria {
 
     @Column(name = "nombre", nullable = false, length = 100)
     private String nombre;
+
+    @ManyToOne
+    @JoinColumn(name = "id_usuario", nullable = false) // Revisa cómo se llama tu columna en Postgres
+    private Usuario usuario;
 }

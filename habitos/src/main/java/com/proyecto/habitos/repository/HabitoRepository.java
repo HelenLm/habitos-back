@@ -5,8 +5,10 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import java.util.List;
 
+// 🎯 Cambiamos el tipo de ID de la entidad a Integer (segundo parámetro)
 @Repository
 public interface HabitoRepository extends JpaRepository<Habito, Integer> {
-    // Método personalizado para buscar todos los hábitos de un usuario en específico
-    List<Habito> findByUsuarioIdUsuario(Integer idUsuario);
+
+    // 🎯 Declaramos el método que le falta a tu servicio
+    List<Habito> findByUsuario_IdUsuario(Integer idUsuario);
 }

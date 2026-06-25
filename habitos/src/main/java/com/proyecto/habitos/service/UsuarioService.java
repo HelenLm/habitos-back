@@ -30,12 +30,14 @@ public class UsuarioService {
         return usuarioGuardado;
     }
 
-    public Usuario obtenerPorId(Integer id) {
-        return usuarioRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado con ID: " + id));
+    // 🎯 CORREGIDO: Cambiado de Integer a Long para coincidir con JpaRepository
+    public Usuario obtenerPorId(Long idUsuario) {
+        return usuarioRepository.findById(idUsuario)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado con ID: " + idUsuario));
     }
 
-    public Usuario actualizarFotoPerfil(Integer idUsuario, MultipartFile archivo) {
+    // 🎯 CORREGIDO: Cambiado de Integer a Long en el parámetro idUsuario
+    public Usuario actualizarFotoPerfil(Long idUsuario, MultipartFile archivo) {
         Usuario usuario = obtenerPorId(idUsuario);
         try {
             usuario.setFotoPerfil(archivo.getBytes()); // Convertimos el archivo a un arreglo de bytes
