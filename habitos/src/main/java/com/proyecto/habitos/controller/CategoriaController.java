@@ -24,4 +24,11 @@ public class CategoriaController {
     public ResponseEntity<Categoria> crearCategoria(@RequestBody Categoria categoria) {
         return ResponseEntity.ok(categoriaService.guardar(categoria));
     }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> eliminar(@PathVariable Long id) {
+        categoriaService.eliminar(id);
+        // Tu lógica de servicio...
+        return ResponseEntity.ok().build();
+    }
 }
