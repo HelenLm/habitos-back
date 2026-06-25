@@ -27,8 +27,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         // 1. Extraer el encabezado llamado Authorization
         final String authHeader = request.getHeader("Authorization");
+        String path = request.getRequestURI();
         final String jwt;
         final String userEmail;
+
+        if (path.startsWith("/api/auth/")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
 
         // 2. Si no viene el token o no empieza con "Bearer ", ignoramos y dejamos pasar
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {

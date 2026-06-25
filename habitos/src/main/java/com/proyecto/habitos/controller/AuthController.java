@@ -5,6 +5,7 @@ import com.proyecto.habitos.repository.UsuarioRepository;
 import com.proyecto.habitos.security.AuthRequest;
 import com.proyecto.habitos.security.AuthResponse;
 import com.proyecto.habitos.security.JwtUtil;
+import com.proyecto.habitos.service.EmailService; // 🎯 Importamos tu EmailService
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -21,6 +22,7 @@ public class AuthController {
     private final UsuarioRepository usuarioRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
+    private final EmailService emailService; // 🎯 Inyectamos tu servicio de correos mediante Lombok
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody AuthRequest request) {
@@ -44,8 +46,15 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<?> registrarUsuario(@RequestBody Map<String, String> request) {
         String nombre = request.get("nombre");
-        String email = request.get("email");
+        String email = request.get("email"); // 🎯 Lee la clave "email" que manda Angular
         String password = request.get("password");
+
+        // Validación extra de seguridad por si acaso llega vacío
+        if (email == null || email.trim().isEmpty()) {
+            Map<String, String> errorResponse = new HashMap<>();
+            errorResponse.put("mensaje", "El correo electrónico es requerido.");
+            return ResponseEntity.badRequest().body(errorResponse);
+        }
 
         // 1. Validar si el correo ya existe
         boolean existe = usuarioRepository.findAll().stream()
@@ -62,20 +71,25 @@ public class AuthController {
         nuevoUsuario.setNombre(nombre);
         nuevoUsuario.setCorreo(email);
 
-        // 🎯 ¡AQUÍ ESTÁ LA SOLUCIÓN! Le asignamos la fecha y hora actual del sistema
+        // Le asignamos la fecha y hora actual del sistema
         nuevoUsuario.setFechaRegistro(java.time.LocalDate.now());
-        // 💡 Nota: Si en tu modelo 'fechaRegistro' es de tipo LocalDateTime, usa:
-        // nuevoUsuario.setFechaRegistro(java.time.LocalDateTime.now());
 
         // Encriptamos la contraseña con BCrypt
         nuevoUsuario.setPassword(passwordEncoder.encode(password));
 
         // 3. Guardar en YugabyteDB
-        usuarioRepository.save(nuevoUsuario);
+        Usuario usuarioGuardado = usuarioRepository.save(nuevoUsuario);
+
+        // 4. 🎯 ¡GATILLO DE ENVIAR CORREO CON GMAIL!
+        // Envolvemos en try-catch para que si falla el servidor SMTP, el registro NO se rompa
+        try {
+            emailService.enviarCorreoBienvenida(usuarioGuardado.getCorreo(), usuarioGuardado.getNombre());
+        } catch (Exception e) {
+            System.err.println(">>> ERROR CRÍTICO AL ENVIAR CORREO DE BIENVENIDA: " + e.getMessage());
+        }
 
         Map<String, String> successResponse = new HashMap<>();
         successResponse.put("mensaje", "¡Usuario creado exitosamente!");
         return ResponseEntity.ok(successResponse);
     }
-
 }
